@@ -1,2 +1,37 @@
 name: 'Start/Stop Bounty'
 
+on: 
+  workflow_dispatch:
+    inputs:
+      directive:
+        description: 'The directive to execute.'
+        required: true
+
+jobs:
+  compute:
+    name: 'Start/Stop Bounty'
+    runs-on: ubuntu-latest
+    permissions: write-all
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.10.0'
+
+      - name: install dependencies
+        run: yarn
+
+      - name: execute directive
+        run: npx tsx ./src/index.ts
+        id: start-stop-bounty
+        env:
+          DIRECTIVE: ${{ github.event.inputs.directive }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
