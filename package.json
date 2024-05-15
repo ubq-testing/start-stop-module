@@ -36,7 +36,12 @@
     "@octokit/webhooks": "^13.1.0",
     "@sinclair/typebox": "^0.32.5",
     "@supabase/supabase-js": "2.42.0",
+    "@ubiquibot/configuration": "^2.1.0",
+    "axios": "^1.6.8",
+    "decimal.js": "^10.4.3",
     "dotenv": "^16.4.4",
+    "ms": "^2.1.3",
+    "node-html-parser": "^6.1.13",
     "octokit": "^3.1.2"
   },
   "devDependencies": {
