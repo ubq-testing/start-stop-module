@@ -1,0 +1,39 @@
+timers:
+  reviewDelayTolerance: "1 day"
+  taskStaleTimeoutDuration: "3 weeks"
+  taskFollowUpDuration: "6 days"
+  taskDisqualifyDuration: "2 weeks"
+disabledCommands: []
+labels: 
+  time: 
+    - "Time: <1 Hour"
+    - "Time: <2 Hours"
+    - "Time: <4 Hours"
+    - "Time: <1 Day"
+    - "Time: <1 Week"
+  priority: 
+    - "Priority: 1 (Normal)"
+    - "Priority: 2 (Medium)"
+    - "Priority: 3 (High)"
+    - "Priority: 4 (Urgent)"
+    - "Priority: 5 (Emergency)"
+miscellaneous: 
+  maxConcurrentTasks: 3
+  
+plugins:
+  issue_comment.created:    
+    - uses:
+      - plugin: ubq-testing/start-stop-module:compute.yml@development
+        name: start-stop
+        id: start-stop-command
+        type: github
+        description: "Allows a user to start/stop a bounty without negative XP impact"
+        command: "/(start|stop)"
+        example: "/start | /stop" 
+        with: 
+          disabledCommands: []
+          timers: []
+          maxConcurrentTasks: 1
+          labels: 
+            time: []
+            priority: []

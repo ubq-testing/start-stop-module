@@ -1,0 +1,17 @@
+plugins:
+  issue_comment.created:    
+    - uses:
+      - plugin: ubq-testing/start-stop-module:compute.yml@development
+        name: start-stop
+        id: start-stop-command
+        type: github
+        description: "Allows a user to start/stop a bounty without negative XP impact"
+        command: "/(start|stop)"
+        example: "/start | /stop" 
+        with: 
+          disabledCommands: []
+          timers: []
+          maxConcurrentTasks: 1
+          labels: 
+            time: []
+            priority: []

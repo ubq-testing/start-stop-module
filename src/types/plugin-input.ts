@@ -13,6 +13,20 @@ export interface PluginInputs<T extends WebhookEventName = SupportedEvents> {
 
 export const startStopSchema = T.Object({
   directive: T.Union([T.Literal("start"), T.Literal("stop")]),
+  disabledCommands: T.Array(T.String()),
+  labels: T.Object({
+    time: T.Array(T.String()),
+    priority: T.Array(T.String()),
+  }),
+  timers: T.Object({
+    reviewDelayTolerance: T.Number(),
+    taskStaleTimeoutDuration: T.Number(),
+    taskFollowUpDuration: T.Number(),
+    taskDisqualifyDuration: T.Number(),
+  }),
+  miscellaneous: T.Object({
+    maxConcurrentTasks: T.Number(),
+  }),
 });
 
 export type StartStopSettings = StaticDecode<typeof startStopSchema>;
