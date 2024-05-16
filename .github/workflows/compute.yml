@@ -16,9 +16,6 @@ on:
         description: "Auth Token"
       ref:
         description: "Ref"
-      directive:
-        description: 'The directive to execute.'
-        required: true
 
 jobs:
   compute:
@@ -46,5 +43,4 @@ jobs:
         run: npx tsx ./src/index.ts
         id: start-stop-bounty
         env:
-          DIRECTIVE: ${{ github.event.inputs.directive }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
