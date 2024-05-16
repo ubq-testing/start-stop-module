@@ -32,7 +32,11 @@ plugins:
         example: "/start | /stop" 
         with: 
           disabledCommands: []
-          timers: []
+          timers: 
+            reviewDelayTolerance: "1 day"
+            taskStaleTimeoutDuration: "3 weeks"
+            taskFollowUpDuration: "6 days"
+            taskDisqualifyDuration: "2 weeks"
           miscellaneous: 
             maxConcurrentTasks: 3
           labels: 
