@@ -9,6 +9,7 @@ import { envSchema } from "./types/env";
 import { startStopSchema, PluginInputs } from "./types/plugin-input";
 import { userStartStop } from "./handlers/user-start-stop";
 import { pluginStartStop } from "./handlers/plugin-start-stop";
+import { addCommentToIssue } from "./utils/issue";
 
 export async function startStopBounty() {
   const payload = github.context.payload.inputs;
@@ -21,7 +22,7 @@ export async function startStopBounty() {
     eventName: payload.eventName,
     eventPayload: payload.eventPayload,
     settings,
-    authToken: env.SUPABASE_KEY,
+    authToken: env.GITHUB_TOKEN,
     ref: payload.ref,
   };
 
@@ -56,16 +57,17 @@ export async function startStopBounty() {
 
   context.adapters = createAdapters(supabase, context);
 
-  let output: object = {};
+  let data: { output: string };
 
-  if ("comment" in context.payload) {
-    const command = context.payload.comment.body.trim();
-    output = await userStartStop(context, command);
+  if (context.eventName === "issue_comment.created") {
+    data = await userStartStop(context);
   } else {
-    output = await pluginStartStop(context, octokit);
+    data = await pluginStartStop(context, octokit);
   }
 
-  await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, output);
+  await addCommentToIssue(context, data.output as string);
+
+  await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
 
   return null;
 }

@@ -10,11 +10,12 @@ import { assignTableComment } from "./shared/table";
 import { checkTaskStale } from "./shared/check-task-stale";
 import { getMultiplierInfoToDisplay } from "./shared/get-multiplier-info";
 
-export async function userStartStop(context: Context, command: string): Promise<object> {
+export async function userStartStop(context: Context): Promise<{ output: string }> {
   const { logger, config, payload } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
-  const directive = command.split(" ")[0].replace("/", "");
+  const { issue, comment, sender } = JSON.parse(payload) as Context<"issue_comment.created">["payload"];
+  const directive = comment.body.split(" ")[0].replace("/", "");
 
   if (directive === "stop") {
     // todo
@@ -33,22 +34,16 @@ export async function userStartStop(context: Context, command: string): Promise<
     throw logger.error(`The '/${directive}' command is disabled for this repository.`);
   }
 
-  if ("issue" in payload === false) {
-    throw logger.error(`Skipping '/${directive}' because of no issue instance`);
-  }
-
-  const issue = payload.issue;
   // is it a child issue?
-
   if (issue.body && isParentIssue(issue.body)) {
     throw logger.error("Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.");
   }
 
   // check max assigned issues
-  const openedPullRequests = await getAvailableOpenedPullRequests(context, payload.sender.login);
+  const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
   logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
 
-  const assignedIssues = await getAssignedIssues(context, payload.sender.login);
+  const assignedIssues = await getAssignedIssues(context, sender.login);
   logger.info("Max issue allowed is", maxConcurrentTasks);
 
   // check for max and enforce max
@@ -80,14 +75,14 @@ export async function userStartStop(context: Context, command: string): Promise<
     throw logger.error(`Skipping '/${directive}' since no price label is set to calculate the duration`);
   }
 
-  const timeLabelsAssigned = getTimeLabelsAssigned(context, payload, config);
+  const timeLabelsAssigned = getTimeLabelsAssigned(context, issue.labels, config);
   if (timeLabelsAssigned) {
     duration = calculateDurations(timeLabelsAssigned).shift() || null;
   }
 
-  const { id, login } = payload.sender;
+  const { id, login } = sender;
 
-  const comment = await generateAssignmentComment(context, issue.created_at, id, duration);
+  const assignmentComment = await generateAssignmentComment(context, issue.created_at, id, duration);
   const metadata = structuredMetadata.create("Assignment", { duration, priceLabel });
 
   // add assignee
@@ -100,12 +95,7 @@ export async function userStartStop(context: Context, command: string): Promise<
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
 
   // get multiplier infos
-  const { multiplierAmount, multiplierReason, totalPriceOfTask } = await getMultiplierInfoToDisplay(
-    context,
-    payload.sender.id,
-    payload.repository.id,
-    issue.labels
-  );
+  const { multiplierAmount, multiplierReason, totalPriceOfTask } = await getMultiplierInfoToDisplay(context, issue.labels);
 
   return {
     output: [
@@ -114,11 +104,11 @@ export async function userStartStop(context: Context, command: string): Promise<
         multiplierReason,
         totalPriceOfTask,
         isTaskStale,
-        daysElapsedSinceTaskCreation: comment.daysElapsedSinceTaskCreation,
-        taskDeadline: comment.deadline,
-        registeredWallet: comment.registeredWallet,
+        daysElapsedSinceTaskCreation: assignmentComment.daysElapsedSinceTaskCreation,
+        taskDeadline: assignmentComment.deadline,
+        registeredWallet: assignmentComment.registeredWallet,
       }),
-      comment.tips,
+      assignmentComment.tips,
       metadata,
     ].join("\n"),
   };

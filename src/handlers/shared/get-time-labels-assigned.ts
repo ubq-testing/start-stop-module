@@ -1,9 +1,8 @@
 import { Context } from "../../types/context";
 import { Label } from "../../types/label";
 
-export function getTimeLabelsAssigned(context: Context, payload, config: BotConfig) {
+export function getTimeLabelsAssigned(context: Context, labels: Label[], config: BotConfig) {
   const logger = context.logger;
-  const labels = payload.issue?.labels;
   if (!labels?.length) {
     logger.error("Skipping '/start' since no labels are set to calculate the timeline", { labels });
     return;

@@ -2,16 +2,16 @@ import { Context } from "../types/context";
 import { HandlerReturnValuesNoVoid } from "../types/handlers";
 import { StreamlinedComment } from "../types/comment";
 import { GitHubAssignEvent, GitHubComment, GitHubIssue, GitHubPayload, IssueType, UserType } from "../types/payload";
+import { LogReturn } from "../adapters/supabase/helpers/logs";
 
 async function getAllIssueEvents(context: Context) {
   if (!context.payload.issue) return;
 
   try {
-    const events = await context.octokit.paginate(context.octokit.issues.listEvents, {
+    return await context.octokit.paginate(context.octokit.issues.listEvents, {
       ...context.event.issue(),
       per_page: 100,
     });
-    return events;
   } catch (err: unknown) {
     context.logger.fatal("Failed to fetch lists of events", err);
     return [];
@@ -25,7 +25,7 @@ export async function getAllLabeledEvents(context: Context) {
 }
 
 export async function clearAllPriceLabelsOnIssue(context: Context) {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   if (!payload.issue) return;
 
   const labels = payload.issue.labels;
@@ -43,31 +43,15 @@ export async function clearAllPriceLabelsOnIssue(context: Context) {
   }
 }
 
-export async function addLabelToIssue(context: Context, labelName: string) {
-  const payload = context.payload;
-  if (!payload.issue) {
-    throw context.logger.fatal("Issue object is null");
-  }
-
-  try {
-    await context.octokit.issues.addLabels({
-      ...context.event.issue(),
-      labels: [labelName],
-    });
-  } catch (e: unknown) {
-    context.logger.fatal("Adding a label to issue failed!", e);
-  }
-}
-
 export async function listAllIssuesAndPullsForRepo(
   context: Context,
   state: "open" | "closed" | "all" = "open",
   sort: "created" | "updated" | "comments" = "created",
   direction: "desc" | "asc" = "desc"
 ) {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   try {
-    const issues = (await context.octokit.paginate(context.octokit.issues.listForRepo, {
+    return (await context.octokit.paginate(context.octokit.issues.listForRepo, {
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       state,
@@ -75,14 +59,13 @@ export async function listAllIssuesAndPullsForRepo(
       direction,
       per_page: 100,
     })) as GitHubIssue[];
-    return issues;
   } catch (err: unknown) {
     context.logger.fatal("Listing all issues and pulls failed!", err);
     return [];
   }
 }
 
-export async function addCommentToIssue(context: Context, message: HandlerReturnValuesNoVoid, issueNumber: number) {
+export async function addCommentToIssue(context: Context, message: HandlerReturnValuesNoVoid) {
   let comment = message as string;
   if (message instanceof LogReturn) {
     comment = message.logMessage.diff;
@@ -92,7 +75,8 @@ export async function addCommentToIssue(context: Context, message: HandlerReturn
     comment = comment.concat(metadataSerializedAsComment);
   }
 
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
+  const issueNumber = payload.issue.number;
   try {
     await context.octokit.issues.createComment({
       owner: payload.repository.owner.login,
@@ -116,7 +100,7 @@ export async function upsertLastCommentToIssue(context: Context, issueNumber: nu
 }
 
 export async function getIssueDescription(context: Context, issueNumber: number, format: "raw" | "html" | "text" = "raw"): Promise<string> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
 
   try {
     const response = await context.octokit.rest.issues.get({
@@ -143,7 +127,7 @@ export async function getIssueDescription(context: Context, issueNumber: number,
 }
 
 export async function getAllIssueComments(context: Context, issueNumber: number, format: "raw" | "html" | "text" | "full" = "raw"): Promise<GitHubComment[]> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload) as GitHubPayload;
 
   try {
     const comments = (await context.octokit.paginate(context.octokit.rest.issues.listComments, {
@@ -163,7 +147,7 @@ export async function getAllIssueComments(context: Context, issueNumber: number,
 }
 
 export async function getAllIssueAssignEvents(context: Context, issueNumber: number): Promise<GitHubAssignEvent[]> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
 
   try {
     const events = (await context.octokit.paginate(
@@ -193,7 +177,7 @@ export async function checkUserPermissionForRepoAndOrg(context: Context, usernam
 }
 
 async function checkUserPermissionForRepo(context: Context, username: string): Promise<boolean> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   try {
     const res = await context.octokit.rest.repos.checkCollaborator({
       owner: payload.repository.owner.login,
@@ -209,7 +193,7 @@ async function checkUserPermissionForRepo(context: Context, username: string): P
 }
 
 async function checkUserPermissionForOrg(context: Context, username: string): Promise<boolean> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   if (!payload.organization) return false;
 
   try {
@@ -226,7 +210,7 @@ async function checkUserPermissionForOrg(context: Context, username: string): Pr
 }
 
 export async function isUserAdminOrBillingManager(context: Context, username: string): Promise<"admin" | "billing_manager" | false> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   const isAdmin = await checkIfIsAdmin();
   if (isAdmin) return "admin";
 
@@ -264,60 +248,23 @@ export async function isUserAdminOrBillingManager(context: Context, username: st
   }
 }
 
-export async function addAssignees(context: Context, issue: number, assignees: string[]) {
-  const payload = context.payload;
+export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
+  const payload = JSON.parse(context.payload) as GitHubPayload;
+
   try {
     await context.octokit.rest.issues.addAssignees({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
-      issue_number: issue,
+      issue_number: issueNo,
       assignees,
     });
   } catch (e: unknown) {
-    context.logger.fatal("Adding assignees failed!", e);
-  }
-}
-
-export async function deleteLabel(context: Context, label: string) {
-  const payload = context.payload;
-  try {
-    const response = await context.octokit.rest.search.issuesAndPullRequests({
-      q: `repo:${payload.repository.owner.login}/${payload.repository.name} label:"${label}" state:open`,
-    });
-    if (response.data.items.length === 0) {
-      //remove label
-      await context.octokit.rest.issues.deleteLabel({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        name: label,
-      });
-    }
-  } catch (e: unknown) {
-    context.logger.fatal("Deleting label failed!", e);
-  }
-}
-
-export async function removeLabel(context: Context, name: string) {
-  const payload = context.payload;
-  if (!payload.issue) {
-    context.logger.debug("Invalid issue object");
-    return;
-  }
-
-  try {
-    await context.octokit.issues.removeLabel({
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
-      issue_number: payload.issue.number,
-      name: name,
-    });
-  } catch (e: unknown) {
-    context.logger.fatal("Removing label failed!", e);
+    console.error("Adding assignees failed!", e);
   }
 }
 
 export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open") {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload) as GitHubPayload;
 
   try {
     const pulls = await context.octokit.paginate(context.octokit.rest.pulls.list, {
@@ -333,36 +280,24 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
   }
 }
 
-export async function closePullRequest(context: Context, pullNumber: number) {
-  const payload = context.payload as GitHubPayload;
-  try {
-    await context.octokit.rest.pulls.update({
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
-      pull_number: pullNumber,
-      state: "closed",
-    });
-  } catch (err: unknown) {
-    context.logger.fatal("Closing pull requests failed!", err);
-  }
-}
-
 export async function getAllPullRequestReviews(context: Context, pullNumber: number, format: "raw" | "html" | "text" | "full" = "raw") {
-  const payload = context.payload;
+  let payload = JSON.parse(context.payload);
+
+  const owner = payload.repository.owner.login;
+  const repo = payload.repository.name;
 
   try {
-    const reviews = await context.octokit.paginate(context.octokit.rest.pulls.listReviews, {
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
+    return await context.octokit.paginate(context.octokit.rest.pulls.listReviews, {
+      owner,
+      repo,
       pull_number: pullNumber,
       per_page: 100,
       mediaType: {
         format,
       },
     });
-    return reviews;
   } catch (err: unknown) {
-    context.logger.fatal("Fetching all pull request reviews failed!", err);
+    console.error("Fetching all pull request reviews failed!", err);
     return [];
   }
 }
@@ -383,7 +318,7 @@ export async function getReviewRequests(context: Context, pullNumber: number, ow
 
 // Get issues by issue number
 export async function getIssueByNumber(context: Context, issueNumber: number) {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
   try {
     const { data: issue } = await context.octokit.rest.issues.get({
       owner: payload.repository.owner.login,
@@ -398,7 +333,7 @@ export async function getIssueByNumber(context: Context, issueNumber: number) {
 }
 
 export async function getPullByNumber(context: Context, pull: number) {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
 
   try {
     const response = await context.octokit.rest.pulls.get({
@@ -415,10 +350,10 @@ export async function getPullByNumber(context: Context, pull: number) {
 
 // Get issues assigned to a username
 export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssue[]> {
-  const payload = context.payload;
+  const payload = JSON.parse(context.payload);
 
   try {
-    const issues = (await context.octokit.paginate(
+    return (await context.octokit.paginate(
       context.octokit.issues.listForRepo,
       {
         owner: payload.repository.owner.login,
@@ -428,7 +363,6 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       },
       ({ data: issues }) => issues.filter((issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
     )) as GitHubIssue[];
-    return issues;
   } catch (err: unknown) {
     context.logger.fatal("Fetching assigned issues failed!", err);
     return [];
@@ -450,7 +384,7 @@ export async function getOpenedPullRequestsForAnIssue(context: Context, issueNum
   });
 }
 
-async function getOpenedPullRequests(context: Context, username: string) {
+async function getOpenedPullRequests(context: Context, username: string): Promise<ReturnType<typeof getAllPullRequests>> {
   const prs = await getAllPullRequests(context, "open");
   return prs.filter((pr) => !pr.draft && (pr.user?.login === username || !username));
 }
