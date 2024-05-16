@@ -1,6 +1,6 @@
 import { Context } from "../types/context";
 import { isParentIssue } from "./shared/handle-parent-issue";
-import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests } from "../utils/issue";
+import { addAssignees, getAssignedIssues, getAvailableOpenedPullRequests } from "../utils/issue";
 import { GitHubIssue, GitHubRepository, IssueType } from "../types";
 import { getTimeLabelsAssigned } from "./shared/get-time-labels-assigned";
 import { calculateDurations } from "../utils/shared";
@@ -141,7 +141,7 @@ async function stop(context: Context, issue: GitHubIssue, sender: { id: number; 
 
   // close PR
 
-  await closePullRequestForAnIssue(context);
+  await closePullRequestForAnIssue(context, issueNumber, repo);
 
   const {
     name,
