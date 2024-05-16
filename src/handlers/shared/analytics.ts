@@ -1,21 +1,21 @@
+import { Label } from "../../types";
 import { Context } from "../../types/context";
-import { GitHubIssue } from "../../types/payload";
 import { calculateLabelValue } from "../../utils/shared";
 
 //  Checks the issue whether it's an open task for public self assignment
 export function taskPaymentMetaData(
   context: Context,
-  issue: GitHubIssue
+  labels: Label[]
 ): {
   eligibleForPayment: boolean;
   timeLabel: string | null;
   priorityLabel: string | null;
   priceLabel: string | null;
 } {
-  const { labels } = context.config;
+  const { labels: configLabels } = context.config;
 
-  const timeLabels = labels.time.filter((configLabel) => issue.labels.map((i) => i.name).includes(configLabel));
-  const priorityLabels = labels.priority.filter((configLabel) => issue.labels.map((i) => i.name).includes(configLabel));
+  const timeLabels = configLabels.time.filter((configLabel) => labels.map((i) => i.name).includes(configLabel));
+  const priorityLabels = configLabels.priority.filter((configLabel) => labels.map((i) => i.name).includes(configLabel));
 
   const isTask = timeLabels.length > 0 && priorityLabels.length > 0;
 
@@ -23,7 +23,7 @@ export function taskPaymentMetaData(
 
   const minPriorityLabel = priorityLabels.length > 0 ? priorityLabels.reduce((a, b) => (calculateLabelValue(a) < calculateLabelValue(b) ? a : b)) : null;
 
-  const priceLabel = issue.labels.find((label) => label.name.includes("Price"))?.name || null;
+  const priceLabel = labels.find((label) => label.name.includes("Price"))?.name || null;
 
   return {
     eligibleForPayment: isTask,

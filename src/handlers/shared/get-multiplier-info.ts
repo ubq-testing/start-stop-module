@@ -1,9 +1,9 @@
+import { Label } from "../../types";
 import { Context } from "../../types/context";
-import { GitHubIssue } from "../../types/payload";
 import { taskPaymentMetaData } from "./analytics";
 import { getUserMultiplier } from "./get-user-multiplier";
 
-export async function getMultiplierInfoToDisplay(context: Context, senderId: number, repoId: number, issue: GitHubIssue) {
+export async function getMultiplierInfoToDisplay(context: Context, senderId: number, repoId: number, labels: Label[]) {
   const userMultiplier = await getUserMultiplier(context, senderId, repoId);
   const value = userMultiplier?.value || null;
   const reason = userMultiplier?.reason || null;
@@ -11,7 +11,7 @@ export async function getMultiplierInfoToDisplay(context: Context, senderId: num
   let totalPriceOfTask: string | null = null;
 
   if (value && value != 1) {
-    const task = taskPaymentMetaData(context, issue);
+    const task = taskPaymentMetaData(context, labels);
 
     if (task.priceLabel) {
       const price = parsePrice(task.priceLabel);
