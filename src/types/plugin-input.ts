@@ -12,7 +12,7 @@ export interface PluginInputs<T extends WebhookEventName = SupportedEvents> {
 }
 
 export const startStopSchema = T.Object({
-  directive: T.Union([T.Literal("start"), T.Literal("stop")]),
+  directive: T.Optional(T.Union([T.Literal("start"), T.Literal("stop")])),
   disabledCommands: T.Array(T.String()),
   labels: T.Object({
     time: T.Array(T.String()),
