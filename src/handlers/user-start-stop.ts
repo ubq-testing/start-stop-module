@@ -14,7 +14,7 @@ export async function userStartStop(context: Context, command: string): Promise<
   const { logger, config, payload } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
-  let directive = command.split(" ")[0].replace("/", "");
+  const directive = command.split(" ")[0].replace("/", "");
 
   if (directive === "stop") {
     // todo
