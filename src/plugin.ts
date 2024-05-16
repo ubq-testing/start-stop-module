@@ -57,7 +57,7 @@ export async function startStopBounty() {
 
   context.adapters = createAdapters(supabase, context);
 
-  let data: { output: string };
+  let data: { output: string | null } = { output: null };
 
   if (context.eventName === "issue_comment.created") {
     data = await userStartStop(context);
@@ -65,8 +65,11 @@ export async function startStopBounty() {
     data = await pluginStartStop(context, octokit);
   }
 
-  await addCommentToIssue(context, data.output as string);
+  if (data?.output) {
+    await addCommentToIssue(context, data.output as string);
+  }
 
+  // returning null to the kernel to end the chain
   await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
 
   return null;
