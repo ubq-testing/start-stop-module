@@ -1,7 +1,7 @@
 import { Context } from "../../types/context";
 import { Label } from "../../types/label";
 
-export function getTimeLabelsAssigned(context: Context, labels: Label[], config: BotConfig) {
+export function getTimeLabelsAssigned(context: Context, labels: Label[], config: Context["config"]) {
   const logger = context.logger;
   if (!labels?.length) {
     logger.error("Skipping '/start' since no labels are set to calculate the timeline", { labels });
@@ -11,9 +11,17 @@ export function getTimeLabelsAssigned(context: Context, labels: Label[], config:
   const timeLabelsAssigned: Label[] = [];
   for (const _label of labels) {
     const _labelType = typeof _label;
-    const _labelName = _labelType === "string" ? _label.toString() : _labelType === "object" ? _label.name : "unknown";
+    let _labelName;
 
-    const timeLabel = timeLabelsDefined.find((label) => label === _labelName);
+    if (_labelType === "string") {
+      _labelName = _label.toString();
+    } else if (_labelType === "object") {
+      _labelName = _label.name;
+    } else {
+      _labelName = "unknown";
+    }
+
+    const timeLabel = timeLabelsDefined.find((label: string) => label === _labelName);
     if (timeLabel) {
       timeLabelsAssigned.push(_label);
     }

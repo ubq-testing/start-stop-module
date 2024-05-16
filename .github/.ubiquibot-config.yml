@@ -4,41 +4,41 @@ timers:
   taskFollowUpDuration: "6 days"
   taskDisqualifyDuration: "2 weeks"
 disabledCommands: []
-labels: 
-  time: 
+labels:
+  time:
     - "Time: <1 Hour"
     - "Time: <2 Hours"
     - "Time: <4 Hours"
     - "Time: <1 Day"
     - "Time: <1 Week"
-  priority: 
+  priority:
     - "Priority: 1 (Normal)"
     - "Priority: 2 (Medium)"
     - "Priority: 3 (High)"
     - "Priority: 4 (Urgent)"
     - "Priority: 5 (Emergency)"
-miscellaneous: 
+miscellaneous:
   maxConcurrentTasks: 3
-  
+
 plugins:
-  issue_comment.created:    
+  issue_comment.created:
     - uses:
-      - plugin: ubq-testing/start-stop-module:compute.yml@development
-        name: start-stop
-        id: start-stop-command
-        type: github
-        description: "Allows a user to start/stop a bounty without negative XP impact"
-        command: "/(start|stop)"
-        example: "/start | /stop" 
-        with: 
-          disabledCommands: []
-          timers: 
-            reviewDelayTolerance: 86000
-            taskStaleTimeoutDuration: 2580000
-            taskFollowUpDuration: 516000
-            taskDisqualifyDuration: 1209600
-          miscellaneous: 
-            maxConcurrentTasks: 3
-          labels: 
-            time: []
-            priority: []
+        - plugin: ubq-testing/start-stop-module:compute.yml@development
+          name: start-stop
+          id: start-stop-command
+          type: github
+          description: "Allows a user to start/stop a bounty without negative XP impact"
+          command: "/(start|stop)"
+          example: "/start | /stop"
+          with:
+            disabledCommands: []
+            timers:
+              reviewDelayTolerance: 86000
+              taskStaleTimeoutDuration: 2580000
+              taskFollowUpDuration: 516000
+              taskDisqualifyDuration: 1209600
+            miscellaneous:
+              maxConcurrentTasks: 3
+            labels:
+              time: []
+              priority: []

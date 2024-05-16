@@ -1,23 +1,6 @@
 import ms from "ms";
 import { Label } from "../types/label";
 
-const contextNamesToSkip = ["workflow_run"];
-
-export function shouldSkip(context) {
-  const payload = context.payload;
-  const response = { stop: false, reason: null } as { stop: boolean; reason: string | null };
-
-  if (contextNamesToSkip.includes(context.name)) {
-    response.stop = true;
-    response.reason = `excluded context name: "${context.name}"`;
-  } else if (payload.sender.type === "Bot") {
-    response.stop = true;
-    response.reason = "sender is a bot";
-  }
-
-  return response;
-}
-
 export function calculateLabelValue(label: string): number {
   const matches = label.match(/\d+/);
   const number = matches && matches.length > 0 ? parseInt(matches[0]) || 0 : 0;

@@ -1,5 +1,4 @@
-name: 'Start/Stop Bounty'
-
+name: "Start/Stop Bounty"
 
 on:
   workflow_dispatch:
@@ -16,13 +15,12 @@ on:
         description: "Auth Token"
       ref:
         description: "Ref"
-      directive: 
+      directive:
         description: "start/stop directive"
-      
 
 jobs:
   compute:
-    name: 'Start/Stop Bounty'
+    name: "Start/Stop Bounty"
     runs-on: ubuntu-latest
     permissions: write-all
     env:
@@ -30,14 +28,13 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
-
     steps:
       - uses: actions/checkout@v4
 
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '20.10.0'
+          node-version: "20.10.0"
 
       - name: install dependencies
         run: yarn

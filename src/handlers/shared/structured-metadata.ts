@@ -1,7 +1,14 @@
 import { LogLevel } from "../../adapters/supabase/pretty-logs";
 import { COMMIT_HASH } from "./commit-hash";
 
-function createStructuredMetadata(className: string, metadata: any) {
+type Metadata<T extends object> = T & {
+  logMessage?: {
+    type: LogLevel;
+    message: string;
+  };
+};
+
+function createStructuredMetadata<T extends object>(className: string, metadata: Metadata<T>) {
   const jsonPretty = JSON.stringify(metadata, null, 2);
   const stackLine = new Error().stack?.split("\n")[2] ?? "";
   const caller = stackLine.match(/at (\S+)/)?.[1] ?? "";
@@ -12,7 +19,7 @@ function createStructuredMetadata(className: string, metadata: any) {
   const metadataSerializedVisible = ["```json", jsonPretty, "```"].join("\n");
   const metadataSerializedHidden = [ubiquityMetadataHeader, jsonPretty, "-->"].join("\n");
 
-  if (metadata?.logMessage?.type === LogLevel.FATAL) {
+  if (metadata.logMessage?.type === LogLevel.FATAL) {
     // if the log message is fatal, then we want to show the metadata
     metadataSerialized = [metadataSerializedVisible, metadataSerializedHidden].join("\n");
   } else {

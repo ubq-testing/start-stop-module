@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Context } from "../types/context";
-import { isParentIssue } from "./shared/handle-parent-issue";
-import { addAssignees, getAssignedIssues, getAvailableOpenedPullRequests } from "../utils/issue";
-import { GitHubIssue, GitHubRepository, IssueType } from "../types";
+import { addAssignees, closePullRequestForAnIssue, getAssignedIssues, getAvailableOpenedPullRequests, isParentIssue } from "../utils/issue";
+import { GitHubUser, IssueType, Label } from "../types";
 import { getTimeLabelsAssigned } from "./shared/get-time-labels-assigned";
 import { calculateDurations } from "../utils/shared";
 import { generateAssignmentComment } from "./shared/generate-assignment-comment";
@@ -9,11 +9,10 @@ import structuredMetadata from "./shared/structured-metadata";
 import { assignTableComment } from "./shared/table";
 import { checkTaskStale } from "./shared/check-task-stale";
 import { getMultiplierInfoToDisplay } from "./shared/get-multiplier-info";
-import { closePullRequestForAnIssue } from "./shared/assign";
 
 export async function userStartStop(context: Context): Promise<{ output: string | null }> {
   const { payload, logger, config } = context;
-  const { issue, comment, sender, repository } = JSON.parse(payload) as Context<"issue_comment.created">["payload"];
+  const { issue, comment, sender, repository } = JSON.parse(payload as unknown as string) as Context<"issue_comment.created">["payload"];
   const directive = comment.body.split(" ")[0].replace("/", "");
   const { disabledCommands } = config;
   const isCommandDisabled = disabledCommands.some((command: string) => command === directive);
@@ -30,7 +29,7 @@ export async function userStartStop(context: Context): Promise<{ output: string 
   return { output: null };
 }
 
-async function start(context: Context, issue: GitHubIssue, sender: { id: number; login: string }) {
+async function start(context: Context, issue: any, sender: { id: number; login: string }) {
   const { logger, config } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
@@ -71,7 +70,7 @@ async function start(context: Context, issue: GitHubIssue, sender: { id: number;
   // get labels
 
   const labels = issue.labels;
-  const priceLabel = labels.find((label) => label.name.startsWith("Price: "));
+  const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
   let duration: number | null = null;
 
@@ -85,13 +84,14 @@ async function start(context: Context, issue: GitHubIssue, sender: { id: number;
   }
 
   const { id, login } = sender;
+  const toCreate = { duration, priceLabel };
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, id, duration);
-  const metadata = structuredMetadata.create("Assignment", { duration, priceLabel });
+  const metadata = structuredMetadata.create<typeof toCreate>("Assignment", toCreate);
 
   // add assignee
 
-  if (!assignees.map((i) => i.login).includes(login)) {
+  if (!assignees.map((i: GitHubUser) => i.login).includes(login)) {
     logger.info("Adding the assignee", { assignee: login });
     await addAssignees(context, issue.number, [login]);
   }
@@ -116,19 +116,21 @@ async function start(context: Context, issue: GitHubIssue, sender: { id: number;
   };
 }
 
-async function stop(context: Context, issue: GitHubIssue, sender: { id: number; login: string }, repo: GitHubRepository) {
+async function stop(context: Context, issue: any, sender: { id: number; login: string }, repo: any) {
   const { logger } = context;
   const issueNumber = issue.number;
 
   // is it an issue?
   if (!issue) {
-    return logger.info(`Skipping '/stop' because of no issue instance`);
+    logger.info(`Skipping '/stop' because of no issue instance`);
+    return { output: null };
   }
 
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
-    return logger.error("No assignees found for issue", { issueNumber });
+    logger.error("No assignees found for issue", { issueNumber });
+    return { output: null };
   }
 
   // should unassign?
@@ -136,7 +138,8 @@ async function stop(context: Context, issue: GitHubIssue, sender: { id: number; 
   const shouldUnassign = assignees[0]?.login.toLowerCase() == sender.login.toLowerCase();
 
   if (!shouldUnassign) {
-    return logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
+    logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
+    return { output: null };
   }
 
   // close PR
@@ -157,8 +160,10 @@ async function stop(context: Context, issue: GitHubIssue, sender: { id: number; 
     assignees: [sender.login],
   });
 
-  return logger.info("You have been unassigned from the task", {
+  logger.info("You have been unassigned from the task", {
     issueNumber,
     user: sender.login,
   });
+
+  return { output: null };
 }
