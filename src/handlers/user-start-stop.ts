@@ -10,13 +10,19 @@ import { assignTableComment } from "./shared/table";
 import { checkTaskStale } from "./shared/check-task-stale";
 import { getMultiplierInfoToDisplay } from "./shared/get-multiplier-info";
 
-export async function userStartStop(context: Context): Promise<object> {
+export async function userStartStop(context: Context, command: string): Promise<object> {
   const { logger, config, payload } = context;
-  const directive = context.env.DIRECTIVE;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
+  let directive = command.split(" ")[0].replace("/", "");
 
-  logger.info(`Received '${directive}' command`, { sender: context.payload.sender.login });
+  if (directive === "stop") {
+    // todo
+    return {};
+  } else if (directive !== "start") {
+    // todo
+    throw logger.error(`Invalid command: ${directive}`);
+  }
 
   // is command disabled?
 

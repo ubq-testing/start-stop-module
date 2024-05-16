@@ -58,8 +58,9 @@ export async function startStopBounty() {
 
   let output: object = {};
 
-  if (context.eventName === "issue_comment.created") {
-    output = await userStartStop(context);
+  if ("comment" in context.payload) {
+    const command = context.payload.comment.body.trim();
+    output = await userStartStop(context, command);
   } else {
     output = await pluginStartStop(context, octokit);
   }
