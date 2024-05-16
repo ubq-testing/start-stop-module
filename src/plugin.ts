@@ -61,8 +61,11 @@ export async function startStopBounty() {
 
   if (context.eventName === "issue_comment.created") {
     data = await userStartStop(context);
+  } else if (context.eventName === "workflow_dispatch") {
+    data = await pluginStartStop(context);
   } else {
-    data = await pluginStartStop(context, octokit);
+    context.logger.error(`Unsupported event: ${context.eventName}`);
+    await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
   }
 
   if (data?.output) {
@@ -70,7 +73,6 @@ export async function startStopBounty() {
   }
 
   // returning null to the kernel to end the chain
-  await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
 
   return null;
 }
