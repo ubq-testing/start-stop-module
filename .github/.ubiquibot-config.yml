@@ -33,7 +33,8 @@ plugins:
         with: 
           disabledCommands: []
           timers: []
-          maxConcurrentTasks: 1
+          miscellaneous: 
+            maxConcurrentTasks: 3
           labels: 
             time: []
             priority: []
