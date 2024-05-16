@@ -1,18 +1,18 @@
+import { GitHubIssue, GitHubRepository } from "../../types";
 import { Context } from "../../types/context";
 import { Label } from "../../types/label";
 import { getLinkedPullRequests } from "../../utils/get-linked-prs";
 import { closePullRequest } from "../../utils/issue";
 import { calculateDurations, calculateLabelValue } from "../../utils/shared";
 
-export async function assignCommandHandler(context: Context) {
-  const config = context.config;
-  const logger = context.logger;
-  const payload = context.payload;
-  if (!payload.issue) {
+export async function assignCommandHandler(context: Context, issue: GitHubIssue, sender: { id: number; login: string }, repo: GitHubRepository) {
+  const { config, logger } = context;
+
+  if (!issue) {
     return logger.fatal("Issue is not defined");
   }
 
-  const assignees = payload.issue.assignees;
+  const assignees = issue.assignees;
 
   // If no valid assignees exist, log a debug message and return
   if (assignees.length === 0) {
@@ -23,7 +23,7 @@ export async function assignCommandHandler(context: Context) {
   const flattenedAssignees = assignees.reduce((acc, assignee) => `${acc} @${assignee?.login}`, "");
 
   // Extract labels from payload
-  const labels = payload.issue?.labels;
+  const labels = issue.labels;
 
   // If no labels exist, log a debug message and return
   if (!labels) {
@@ -73,17 +73,16 @@ export async function assignCommandHandler(context: Context) {
   return logger.info(commitMessage);
 }
 
-export async function closePullRequestForAnIssue(context: Context) {
+export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: GitHubRepository) {
   const logger = context.logger;
-  const payload = context.event.payload;
-  if (!payload.issue?.number) {
+  if (!issueNumber) {
     throw logger.fatal("Issue is not defined");
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
-    owner: payload.repository.owner.login,
-    repository: payload.repository.name,
-    issue: payload.issue.number,
+    owner: repository.owner.login,
+    repository: repository.name,
+    issue: issueNumber,
   });
 
   if (!linkedPullRequests.length) {

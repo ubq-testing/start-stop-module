@@ -65,6 +65,20 @@ export async function listAllIssuesAndPullsForRepo(
   }
 }
 
+export async function closePullRequest(context: Context, pullNumber: number) {
+  const { repository } = JSON.parse(context.payload);
+  try {
+    await context.octokit.rest.pulls.update({
+      owner: repository.owner.login,
+      repo: repository.name,
+      pull_number: pullNumber,
+      state: "closed",
+    });
+  } catch (err: unknown) {
+    context.logger.fatal("Closing pull requests failed!", err);
+  }
+}
+
 export async function addCommentToIssue(context: Context, message: HandlerReturnValuesNoVoid) {
   let comment = message as string;
   if (message instanceof LogReturn) {
