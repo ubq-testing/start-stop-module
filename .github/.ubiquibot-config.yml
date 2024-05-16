@@ -33,10 +33,10 @@ plugins:
         with: 
           disabledCommands: []
           timers: 
-            reviewDelayTolerance: "1 day"
-            taskStaleTimeoutDuration: "3 weeks"
-            taskFollowUpDuration: "6 days"
-            taskDisqualifyDuration: "2 weeks"
+            reviewDelayTolerance: 86000
+            taskStaleTimeoutDuration: 2580000
+            taskFollowUpDuration: 516000
+            taskDisqualifyDuration: 1209600
           miscellaneous: 
             maxConcurrentTasks: 3
           labels: 
