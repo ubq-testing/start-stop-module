@@ -2,6 +2,7 @@ import { Database } from "../types/database";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Super } from "./supabase";
 import { Context } from "../../../types/context";
+import { addCommentToIssue } from "../../../utils/issue";
 
 export class Wallet extends Super {
   constructor(supabase: SupabaseClient<Database>, context: Context) {
@@ -10,8 +11,12 @@ export class Wallet extends Super {
 
   async getWalletByUserId(userId: number) {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
-    if (error) {
-      console.error("Failed to get wallet", { userId, error });
+    if (error && error.code === "PGRST116") {
+      /** @TODO /wallet command? */
+      await addCommentToIssue(this.context, "Please set your wallet address with the `/wallet` command.");
+      throw new Error("Wallet not set");
+    } else if (error) {
+      console.error("Failed to fetch wallet", { userId, error });
       throw error;
     }
 
