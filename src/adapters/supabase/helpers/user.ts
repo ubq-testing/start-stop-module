@@ -33,8 +33,8 @@ export class User extends Super {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if ((error && !data) || !data.wallets?.address) {
       console.error("No wallet address found", { userId, issueNumber }, true);
-      await addCommentToIssue(this.context.octokit, "```diff # Please set your wallet address with the /wallet command first and try again. ```");
-      return null;
+      await addCommentToIssue(this.context, "```diff\n # Please set your wallet address with the /wallet command first and try again.\n```");
+      throw new Error("No wallet address found");
     }
 
     console.info("Successfully fetched wallet", { userId, address: data.wallets?.address });

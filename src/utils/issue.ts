@@ -38,7 +38,8 @@ export async function addCommentToIssue(context: Context, message: HandlerReturn
     comment = comment.concat(metadataSerializedAsComment);
   }
 
-  const payload = context.payload;
+  const { payload } = context;
+
   const issueNumber = payload.issue.number;
   try {
     await context.octokit.issues.createComment({
@@ -90,6 +91,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     await closePullRequest(context, linkedPullRequests[i].number);
     comment += ` <a href="${linkedPullRequests[i].href}">#${linkedPullRequests[i].number}</a> `;
   }
+  await addCommentToIssue(context, comment);
   return logger.info(comment);
 }
 
@@ -104,7 +106,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    console.error("Adding assignees failed!", e);
+    throw context.logger.fatal("Adding the assignee failed", { assignee: assignees, issueNo }, e);
   }
 }
 

@@ -16,7 +16,11 @@ export async function start(context: Context, issue: any, sender: { id: number; 
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
-    throw logger.error("Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.");
+    await addCommentToIssue(
+      context,
+      "```diff\n# Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.\n```"
+    );
+    throw logger.error(`Skipping '/start' since the issue is a parent issue`);
   }
 
   // check max assigned issues
@@ -30,6 +34,7 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   // check for max and enforce max
 
   if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
+    await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
     throw logger.error("Too many assigned issues, you have reached your max limit", {
       maxConcurrentTasks,
     });
@@ -38,11 +43,13 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   // is it assignable?
 
   if (issue.state === IssueType.CLOSED) {
+    await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned bounty.\n```");
     throw logger.error(`Skipping '/start' since the issue is closed`);
   }
 
   const assignees = (issue?.assignees ?? []).filter(Boolean);
   if (assignees.length !== 0) {
+    await addCommentToIssue(context, "```diff\n! The issue is already assigned. Please choose another unassigned bounty.\n```");
     throw logger.error(`Skipping '/start' since the issue is already assigned`);
   }
 
@@ -54,6 +61,7 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   let duration: number | null = null;
 
   if (!priceLabel) {
+    await addCommentToIssue(context, "```diff\n! No price label is set to calculate the duration.\n```");
     throw logger.error(`Skipping '/start' since no price label is set to calculate the duration`);
   }
 
@@ -71,7 +79,6 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   // add assignee
 
   if (!assignees.map((i: GitHubUser) => i.login).includes(login)) {
-    logger.info("Adding the assignee", { assignee: login });
     await addAssignees(context, issue.number, [login]);
   }
 
