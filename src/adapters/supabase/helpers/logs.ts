@@ -341,20 +341,13 @@ export class Logs {
     // post on issue
     if (!this._context) return;
     const { payload } = this._context;
-
-    let issueNumber: number;
-
-    if ("issue" in payload) {
-      issueNumber = payload.issue.number;
-    } else {
-      return;
-    }
+    const { issue } = payload as Context<"issue_comment.created">["payload"];
 
     this._context.octokit.issues
       .createComment({
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
-        issue_number: issueNumber,
+        issue_number: issue.number,
         body: message,
       })
       .catch((x) => console.trace(x));
