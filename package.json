@@ -1,7 +1,7 @@
 {
-  "name": "ts-template",
+  "name": "@ubiquibot-plugins/start-stop",
   "version": "1.0.0",
-  "description": "Template repository with TypeScript support.",
+  "description": "Enables the assignment of tasks to hunters and the graceful unassignment.",
   "main": "build/index.ts",
   "author": "Ubiquity DAO",
   "license": "MIT",
