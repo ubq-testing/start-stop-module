@@ -1,4 +1,3 @@
-export * from "./comment";
 export * from "./context";
 export * from "./env";
 export * from "./handlers";

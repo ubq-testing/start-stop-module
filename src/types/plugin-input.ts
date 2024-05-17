@@ -12,8 +12,6 @@ export interface PluginInputs<T extends WebhookEventName = SupportedEvents> {
 }
 
 export const startStopSchema = T.Object({
-  directive: T.Optional(T.Union([T.Literal("start"), T.Literal("stop")])),
-  xpAmount: T.Optional(T.Number()),
   disabledCommands: T.Array(T.String()),
   labels: T.Object({
     time: T.Array(T.String()),

@@ -2,35 +2,7 @@
 
 import { Static, Type } from "@sinclair/typebox";
 import { labelSchema } from "./label";
-
-export enum GitHubEvent {
-  // issues events
-  ISSUES_LABELED = "issues.labeled",
-  ISSUES_UNLABELED = "issues.unlabeled",
-  ISSUES_ASSIGNED = "issues.assigned",
-  ISSUES_UNASSIGNED = "issues.unassigned",
-  ISSUES_CLOSED = "issues.closed",
-  ISSUES_OPENED = "issues.opened",
-  ISSUES_REOPENED = "issues.reopened",
-
-  // issue_comment
-  ISSUE_COMMENT_CREATED = "issue_comment.created",
-  ISSUE_COMMENT_EDITED = "issue_comment.edited",
-
-  // pull_request
-  PULL_REQUEST_OPENED = "pull_request.opened",
-
-  // installation event
-  INSTALLATION_ADDED_EVENT = "installation_repositories.added",
-
-  // push event
-  PUSH_EVENT = "push",
-
-  // label
-  LABEL_EDITED = "label.edited",
-
-  REPOSITORY_DISPATCH = "repository_dispatch",
-}
+import { LogReturn } from "../adapters/supabase/helpers/logs";
 
 export enum UserType {
   User = "User",
@@ -71,28 +43,7 @@ const userSchema = Type.Object({
   site_admin: Type.Boolean(),
 });
 
-// const UserProfileSchema = Type.Intersect([
-//   UserSchema,
-//   Type.Object({
-//     name: Type.String(),
-//     company: Type.String(),
-//     blog: Type.String(),
-//     location: Type.String(),
-//     email: Type.String(),
-//     hireable: Type.Boolean(),
-//     bio: Type.String(),
-//     twitter_username: Type.String(),
-//     public_repos: Type.Number(),
-//     public_gists: Type.Number(),
-//     followers: Type.Number(),
-//     following: Type.Number(),
-//     created_at: Type.String(),
-//     updated_at: Type.String(),
-//   }),
-// ]);
-
 export type GitHubUser = Static<typeof userSchema>;
-// type UserProfile= Static<typeof UserProfileSchema>;
 export enum AuthorAssociation {
   OWNER = "OWNER",
   COLLABORATOR = "COLLABORATOR",
@@ -102,7 +53,6 @@ export enum AuthorAssociation {
   FIRST_TIME_CONTRIBUTOR = "FIRST_TIME_CONTRIBUTOR",
   NONE = "NONE",
 }
-// const AuthorAssociation = Type.Enum(_AuthorAssociation);
 
 const issueSchema = Type.Object({
   assignee: Type.Union([Type.Null(), userSchema]),
@@ -128,13 +78,6 @@ const issueSchema = Type.Object({
   updated_at: Type.String({ format: "date-time" }),
   url: Type.String(),
   user: userSchema,
-  // OWNER: The author is an owner of the repository.
-  // COLLABORATOR: The author is a collaborator on the repository.
-  // MEMBER: The author is a member of the organization that owns the repository.
-  // CONTRIBUTOR: The author has contributed to the repository but is not a collaborator, member, or owner.
-  // FIRST_TIMER: The author is a first-time contributor to the repository.
-  // FIRST_TIME_CONTRIBUTOR: Similar to "FIRST_TIMER," the author is a first-time contributor to the repository.
-  // NONE: The author does not have any specific association with the repository.
 });
 
 export type GitHubIssue = Static<typeof issueSchema>;
@@ -235,16 +178,6 @@ const organizationSchema = Type.Object({
   description: Type.Union([Type.String(), Type.Null()]),
 });
 
-const commitsSchema = Type.Object({
-  id: Type.String(),
-  distinct: Type.Boolean(),
-  added: Type.Array(Type.String()),
-  removed: Type.Array(Type.String()),
-  modified: Type.Array(Type.String()),
-});
-
-export type GitHubCommitsPayload = Static<typeof commitsSchema>;
-
 const installationSchema = Type.Object({
   id: Type.Number(),
   node_id: Type.String(),
@@ -275,25 +208,7 @@ const commentSchema = Type.Object({
     rocket: Type.Number(),
     eyes: Type.Number(),
   }),
-  // performed_via_github_app: Type.Optional(Type.Boolean()),
 });
-
-export type GitHubComment = Static<typeof commentSchema>;
-
-const assignEventSchema = Type.Object({
-  url: Type.String(),
-  id: Type.Number(),
-  node_id: Type.String(),
-  event: Type.String(),
-  commit_id: Type.String(),
-  commit_url: Type.String(),
-  created_at: Type.String({ format: "date-time" }),
-  actor: userSchema,
-  assignee: userSchema,
-  assigner: userSchema,
-});
-
-export type GitHubAssignEvent = Static<typeof assignEventSchema>;
 
 const changesSchema = Type.Object({
   body: Type.Optional(
@@ -323,108 +238,4 @@ export const payloadSchema = Type.Object({
 
 export type GitHubPayload = Static<typeof payloadSchema>;
 
-const pushSchema = Type.Object({
-  ref: Type.String(),
-  action: Type.String(),
-  before: Type.String(),
-  after: Type.String(),
-  repository: repositorySchema,
-  sender: userSchema,
-  created: Type.Boolean(),
-  deleted: Type.Boolean(),
-  forced: Type.Boolean(),
-  commits: Type.Array(commitsSchema),
-  head_commit: commitsSchema,
-  installation: Type.Optional(installationSchema),
-});
-
-export type GitHubPushPayload = Static<typeof pushSchema>;
-
-const githubContentSchema = Type.Object({
-  type: Type.String(),
-  encoding: Type.String(),
-  size: Type.Number(),
-  name: Type.String(),
-  path: Type.String(),
-  content: Type.String(),
-  sha: Type.String(),
-  url: Type.String(),
-  git_url: Type.String(),
-  html_url: Type.String(),
-  download_url: Type.String(),
-  _links: Type.Union([
-    Type.Undefined(),
-    Type.Object({
-      git: Type.String(),
-      self: Type.String(),
-      html: Type.String(),
-    }),
-  ]),
-});
-
-export type GithubContent = Static<typeof githubContentSchema>;
-// type GitHubOrganization = {
-//   login: string;
-//   id: number;
-//   node_id: string;
-//   url: string;
-//   repos_url: string;
-//   events_url: string;
-//   hooks_url: string;
-//   issues_url: string;
-//   members_url: string;
-//   public_members_url: string;
-//   avatar_url: string;
-//   description: string;
-// };
-
-// type GitHubOrganizationPayload = {
-//   action: string;
-//   membership?: {
-//     url: string;
-//     state: string;
-//     role: string;
-//     organization_url: string;
-//     user: {
-//       login: string;
-//       id: number;
-//       node_id: string;
-//       avatar_url: string;
-//       gravatar_id: string;
-//       url: string;
-//       html_url: string;
-//       followers_url: string;
-//       following_url: string;
-//       gists_url: string;
-//       starred_url: string;
-//       subscriptions_url: string;
-//       organizations_url: string;
-//       repos_url: string;
-//       events_url: string;
-//       received_events_url: string;
-//       type: string;
-//       site_admin: boolean;
-//     };
-//   };
-//   organization: GitHubOrganization;
-//   sender: {
-//     login: string;
-//     id: number;
-//     node_id: string;
-//     avatar_url: string;
-//     gravatar_id: string;
-//     url: string;
-//     html_url: string;
-//     followers_url: string;
-//     following_url: string;
-//     gists_url: string;
-//     starred_url: string;
-//     subscriptions_url: string;
-//     organizations_url: string;
-//     repos_url: string;
-//     events_url: string;
-//     received_events_url: string;
-//     type: string;
-//     site_admin: boolean;
-//   };
-// };
+export type HandlerReturnValuesNoVoid = null | string | LogReturn;
