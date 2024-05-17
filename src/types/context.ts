@@ -4,7 +4,7 @@ import { StartStopSettings } from "./plugin-input";
 import { createAdapters } from "../adapters";
 import { Env } from "./env";
 
-export type SupportedEvents = "issue_comment.created" | "workflow_dispatch";
+export type SupportedEvents = "issue_comment.created";
 
 export interface Logger {
   fatal: (message: unknown, ...optionalParams: unknown[]) => void;

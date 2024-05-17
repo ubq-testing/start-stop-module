@@ -20,8 +20,6 @@ export const startStopSchema = T.Object({
   timers: T.Object({
     reviewDelayTolerance: T.Number(),
     taskStaleTimeoutDuration: T.Number(),
-    taskFollowUpDuration: T.Number(),
-    taskDisqualifyDuration: T.Number(),
   }),
   miscellaneous: T.Object({
     maxConcurrentTasks: T.Number(),
