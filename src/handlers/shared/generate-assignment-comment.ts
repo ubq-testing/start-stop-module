@@ -10,7 +10,13 @@ const options: Intl.DateTimeFormatOptions = {
   timeZoneName: "short",
 };
 
-export async function generateAssignmentComment(context: Context, issueCreatedAt: string, senderId: number, duration: number | null = null) {
+export async function generateAssignmentComment(
+  context: Context,
+  issueCreatedAt: string,
+  issueNumber: number,
+  senderId: number,
+  duration: number | null = null
+) {
   const startTime = new Date().getTime();
   let endTime: null | Date = null;
   let deadline: null | string = null;
@@ -26,7 +32,8 @@ export async function generateAssignmentComment(context: Context, issueCreatedAt
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),
     deadline,
-    registeredWallet: (await context.adapters.supabase.wallet.getWalletByUserId(senderId)) || "Please set your wallet address to use `/wallet 0x0000...0000`",
+    registeredWallet:
+      (await context.adapters.supabase.user.getWalletByUserId(senderId, issueNumber)) || "Please set your wallet address to use `/wallet 0x0000...0000`",
     tips: `<h6>Tips:</h6>
     <ul>
     <li>Use <code>/wallet 0x0000...0000</code> if you want to update your registered payment wallet address.</li>

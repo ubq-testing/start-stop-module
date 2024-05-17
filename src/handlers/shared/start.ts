@@ -15,7 +15,6 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   const { taskStaleTimeoutDuration } = config.timers;
 
   // is it a child issue?
-
   if (issue.body && isParentIssue(issue.body)) {
     throw logger.error("Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.");
   }
@@ -66,7 +65,7 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   const { id, login } = sender;
   const toCreate = { duration, priceLabel };
 
-  const assignmentComment = await generateAssignmentComment(context, issue.created_at, id, duration);
+  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create<typeof toCreate>("Assignment", toCreate);
 
   // add assignee

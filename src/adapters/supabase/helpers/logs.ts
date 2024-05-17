@@ -53,6 +53,7 @@ export class Logs {
   private _log({ level, consoleLog, logMessage, metadata, postComment, type }: LogParams): LogReturn | null {
     if (this._getNumericLevel(level) > this._maxLevel) return null; // filter out more verbose logs according to maxLevel set in config
 
+    console.log("Logging:", logMessage, metadata);
     // needs to generate three versions of the information.
     // they must all first serialize the error object if it exists
     // - the comment to post on supabase (must be raw)
@@ -62,6 +63,7 @@ export class Logs {
     consoleLog(logMessage, metadata || undefined);
 
     if (this._context && postComment) {
+      console.log("Posting comment");
       const colorizedCommentMessage = this._diffColorCommentMessage(type, logMessage);
       const commentMetaData = metadata ? Logs._commentMetaData(metadata, level) : null;
       this._postComment(metadata ? [colorizedCommentMessage, commentMetaData].join("\n") : colorizedCommentMessage);
@@ -338,6 +340,7 @@ export class Logs {
   }
 
   private _postComment(message: string) {
+    console.log("Posting comment:", message);
     // post on issue
     if (!this._context) return;
     const { payload } = this._context;

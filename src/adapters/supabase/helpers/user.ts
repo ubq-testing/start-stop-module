@@ -17,46 +17,26 @@ export class User extends Super {
     super(supabase, context);
   }
 
-  async getUserById(userId: number) {
+  async getUserById(userId: number, issueNumber: number) {
     const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
-      console.error(FAILED_TO_GET_USER, { userId, error });
-      throw error;
+      this.context.logger.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
     }
 
-    console.log(SUCCESSFULLY_FETCHED_USER, { userId, ...data });
+    this.context.logger.info(SUCCESSFULLY_FETCHED_USER, { userId, issueNumber, ...data });
     return data;
   }
 
-  async getUserIdByWallet(wallet: string) {
-    const { data, error } = await this.supabase.from("wallets").select("id").eq("address", wallet).single();
-    if (error) {
-      console.error(FAILED_TO_GET_USER, { wallet, error });
+  async getWalletByUserId(userId: number, issueNumber: number) {
+    const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
+    if ((error && !data) || !data.wallets?.address) {
+      /** @TODO /wallet command? */
+      this.context.logger.error("Please set your wallet address with the /wallet command", { userId, issueNumber }, true);
       throw error;
     }
 
-    console.log(SUCCESSFULLY_FETCHED_USER, { wallet, userId: data?.id });
-    return data?.id.toString();
-  }
-
-  async upsertUser(userId: number, username: string) {
-    const { error } = await this.supabase.from("users").upsert({ id: userId, username }).select();
-    if (error) {
-      console.error("Failed to upsert user", { userId, username, error });
-      throw error;
-    }
-
-    console.log("Successfully upserted user", { userId, username });
-  }
-
-  async deleteUser(userId: number) {
-    const { error } = await this.supabase.from("users").delete().eq("user_id", userId);
-    if (error) {
-      console.error("Failed to delete user", { userId, error });
-      throw error;
-    }
-
-    console.log("Successfully deleted user", { userId });
+    this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
+    return data.wallets?.address;
   }
 
   public async getMultiplier(userId: number, repositoryId: number) {
