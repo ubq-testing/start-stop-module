@@ -39,7 +39,7 @@ plugins:
               taskFollowUpDuration: 516000
               taskDisqualifyDuration: 1209600
             miscellaneous:
-              maxConcurrentTasks: 1
+              maxConcurrentTasks: 3
             labels:
               time: []
               priority: []
