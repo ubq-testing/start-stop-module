@@ -2,7 +2,6 @@ import { Database } from "../types/database";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Super } from "./supabase";
 import { Context } from "../../../types/context";
-import { addCommentToIssue } from "../../../utils/issue";
 
 export class Wallet extends Super {
   constructor(supabase: SupabaseClient<Database>, context: Context) {
@@ -13,14 +12,13 @@ export class Wallet extends Super {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if (error && error.code === "PGRST116") {
       /** @TODO /wallet command? */
-      await addCommentToIssue(this.context, "Please set your wallet address with the `/wallet` command.");
-      throw new Error("Wallet not set");
+      this.context.logger.error("Please set your wallet address with the /wallet command", { userId }, true);
     } else if (error) {
-      console.error("Failed to fetch wallet", { userId, error });
+      this.context.logger.error("Failed to fetch wallet", { userId, error });
       throw error;
     }
 
-    console.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
+    this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
     return data.wallets?.address;
   }
 
@@ -28,17 +26,17 @@ export class Wallet extends Super {
     const { error: walletError, data } = await this.supabase.from("wallets").upsert([{ address }]).select().single();
 
     if (walletError) {
-      console.error("Failed to upsert wallet", { userId, address, walletError });
+      this.context.logger.error("Failed to upsert wallet", { userId, address, walletError });
       throw walletError;
     }
 
     const { error: userError } = await this.supabase.from("users").upsert([{ id: userId, wallet_id: data.id }]);
 
     if (userError) {
-      console.error("Failed to upsert user with new wallet", { userId, address, userError });
+      this.context.logger.error("Failed to upsert user with new wallet", { userId, address, userError });
       throw userError;
     }
 
-    console.info("Successfully upsert wallet", { userId, address });
+    this.context.logger.info("Successfully upsert wallet", { userId, address });
   }
 }
