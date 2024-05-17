@@ -20,7 +20,7 @@ export class User extends Super {
   async getUserById(userId: number, issueNumber: number) {
     const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
-      this.context.logger.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
+      return this.context.logger.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
     }
 
     this.context.logger.info(SUCCESSFULLY_FETCHED_USER, { userId, issueNumber, ...data });
@@ -31,8 +31,7 @@ export class User extends Super {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if ((error && !data) || !data.wallets?.address) {
       /** @TODO /wallet command? */
-      this.context.logger.error("Please set your wallet address with the /wallet command", { userId, issueNumber }, true);
-      throw error;
+      return this.context.logger.error("Please set your wallet address with the /wallet command", { userId, issueNumber }, true);
     }
 
     this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });

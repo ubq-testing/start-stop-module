@@ -42,4 +42,3 @@ jobs:
         id: start-stop-bounty
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DIRECTIVE: ${{ github.event.inputs.directive }}
