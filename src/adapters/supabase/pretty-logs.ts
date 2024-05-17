@@ -6,6 +6,7 @@ export class PrettyLogs {
   constructor() {
     this.ok = this.ok.bind(this);
     this.info = this.info.bind(this);
+    this.warn = this.warn.bind(this);
     this.error = this.error.bind(this);
     this.fatal = this.fatal.bind(this);
     this.debug = this.debug.bind(this);
@@ -21,6 +22,10 @@ export class PrettyLogs {
 
   public ok(message: string, metadata?: any) {
     this._logWithStack("ok", message, metadata);
+  }
+
+  public warn(message: string, metadata?: any) {
+    this._logWithStack(LogLevel.ERROR, message, metadata);
   }
 
   public info(message: string, metadata?: any) {

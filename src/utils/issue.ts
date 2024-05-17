@@ -10,7 +10,7 @@ export function isParentIssue(body: string) {
 }
 
 export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssue[]> {
-  const payload = JSON.parse(context.payload as unknown as string);
+  const payload = context.payload;
 
   try {
     return (await context.octokit.paginate(
@@ -39,7 +39,7 @@ export async function addCommentToIssue(context: Context, message: HandlerReturn
     comment = comment.concat(metadataSerializedAsComment);
   }
 
-  const payload = JSON.parse(context.payload as unknown as string);
+  const payload = context.payload;
   const issueNumber = payload.issue.number;
   try {
     await context.octokit.issues.createComment({
@@ -56,7 +56,7 @@ export async function addCommentToIssue(context: Context, message: HandlerReturn
 //// Pull Requests \\\\
 
 export async function closePullRequest(context: Context, pullNumber: number) {
-  const { repository } = JSON.parse(context.payload as unknown as string);
+  const { repository } = context.payload;
   try {
     await context.octokit.rest.pulls.update({
       owner: repository.owner.login,
@@ -92,11 +92,10 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     comment += ` <a href="${linkedPullRequests[i].href}">#${linkedPullRequests[i].number}</a> `;
   }
   return logger.info(comment);
-  // await addCommentToIssue(comment, payload.issue.number);
 }
 
 export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
-  const payload = JSON.parse(context.payload as unknown as string) as GitHubPayload;
+  const payload = context.payload as GitHubPayload;
 
   try {
     await context.octokit.rest.issues.addAssignees({
@@ -111,7 +110,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
 }
 
 export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open") {
-  const payload = JSON.parse(context.payload as unknown as string) as GitHubPayload;
+  const payload = context.payload as GitHubPayload;
 
   try {
     return await context.octokit.paginate(context.octokit.rest.pulls.list, {
@@ -127,7 +126,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
 }
 
 export async function getAllPullRequestReviews(context: Context, pullNumber: number, format: "raw" | "html" | "text" | "full" = "raw") {
-  const payload = JSON.parse(context.payload as unknown as string);
+  const payload = context.payload;
 
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;

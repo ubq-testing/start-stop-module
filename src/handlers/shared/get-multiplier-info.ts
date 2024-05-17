@@ -4,7 +4,7 @@ import { taskPaymentMetaData } from "./analytics";
 import { getUserMultiplier } from "./get-user-multiplier";
 
 export async function getMultiplierInfoToDisplay(context: Context, labels: Label[]) {
-  const payload = JSON.parse(context.payload as unknown as string);
+  const payload = context.payload;
   const senderId = payload.sender.id;
   const repoId = payload.repository.id;
   const userMultiplier = await getUserMultiplier(context, senderId, repoId);

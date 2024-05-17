@@ -4,6 +4,7 @@ import { User } from "./supabase/helpers/user";
 import { Super } from "./supabase/helpers/supabase";
 import { Database } from "./supabase/types/database";
 import { Wallet } from "./supabase/helpers/wallet";
+import { Logs } from "./supabase/helpers/logs";
 
 export function createAdapters(supabaseClient: SupabaseClient<Database>, context: Context) {
   return {
@@ -11,6 +12,7 @@ export function createAdapters(supabaseClient: SupabaseClient<Database>, context
       wallet: new Wallet(supabaseClient, context),
       user: new User(supabaseClient, context),
       super: new Super(supabaseClient, context),
+      logger: new Logs(supabaseClient, 3, "ERROR", context),
     },
   };
 }

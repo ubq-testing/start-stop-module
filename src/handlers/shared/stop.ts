@@ -1,5 +1,5 @@
 import { Context } from "../../types";
-import { closePullRequestForAnIssue } from "../../utils/issue";
+import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function stop(context: Context, issue: any, sender: { id: number; login: string }, repo: any) {
@@ -9,14 +9,14 @@ export async function stop(context: Context, issue: any, sender: { id: number; l
   // is it an issue?
   if (!issue) {
     logger.info(`Skipping '/stop' because of no issue instance`);
-    return { output: null };
+    return;
   }
 
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
     logger.error("No assignees found for issue", { issueNumber });
-    return { output: null };
+    return;
   }
 
   // should unassign?
@@ -25,7 +25,7 @@ export async function stop(context: Context, issue: any, sender: { id: number; l
 
   if (!shouldUnassign) {
     logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    return { output: null };
+    return;
   }
 
   // close PR
@@ -51,5 +51,5 @@ export async function stop(context: Context, issue: any, sender: { id: number; l
     user: sender.login,
   });
 
-  return { output: null };
+  addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(console.error);
 }

@@ -3,8 +3,6 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { Super } from "./supabase";
 import { Context } from "../../../types/context";
 
-export type UserRow = Database["public"]["Tables"]["users"]["Row"];
-
 export class User extends Super {
   locationResponse: LocationResponse | undefined;
 

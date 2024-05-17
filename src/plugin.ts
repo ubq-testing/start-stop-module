@@ -8,8 +8,7 @@ import { Context } from "./types/context";
 import { envSchema } from "./types/env";
 import { startStopSchema, PluginInputs } from "./types/plugin-input";
 import { userStartStop } from "./handlers/user-start-stop";
-import { pluginStartStop } from "./handlers/plugin-start-stop";
-import { addCommentToIssue } from "./utils/issue";
+import { Logs } from "./adapters/supabase/helpers/logs";
 
 export async function startStopBounty() {
   const payload = github.context.payload.inputs;
@@ -20,7 +19,7 @@ export async function startStopBounty() {
   const inputs: PluginInputs = {
     stateId: payload.stateId,
     eventName: payload.eventName,
-    eventPayload: payload.eventPayload,
+    eventPayload: JSON.parse(payload.eventPayload),
     settings,
     authToken: env.GITHUB_TOKEN,
     ref: payload.ref,
@@ -35,45 +34,22 @@ export async function startStopBounty() {
     config: inputs.settings,
     octokit,
     env,
-    logger: {
-      debug(message: unknown, ...optionalParams: unknown[]) {
-        console.debug(message, ...optionalParams);
-      },
-      info(message: unknown, ...optionalParams: unknown[]) {
-        console.log(message, ...optionalParams);
-      },
-      warn(message: unknown, ...optionalParams: unknown[]) {
-        console.warn(message, ...optionalParams);
-      },
-      error(message: unknown, ...optionalParams: unknown[]) {
-        console.error(message, ...optionalParams);
-      },
-      fatal(message: unknown, ...optionalParams: unknown[]) {
-        console.error(message, ...optionalParams);
-      },
-    },
+    logger: {} as Logs,
     adapters: {} as ReturnType<typeof createAdapters>,
   };
 
   context.adapters = createAdapters(supabase, context);
+  context.logger = context.adapters.supabase.logger;
 
   let data: { output: string | null } = { output: null };
 
   if (context.eventName === "issue_comment.created") {
     data = await userStartStop(context);
-  } else if (context.eventName === "workflow_dispatch") {
-    data = await pluginStartStop(context);
   } else {
     context.logger.error(`Unsupported event: ${context.eventName}`);
-    await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
   }
 
-  if (data?.output) {
-    await addCommentToIssue(context, data.output as string);
-  }
-
-  // returning null to the kernel to end the chain
-
+  await returnDataToKernel(env.GITHUB_TOKEN, inputs.stateId, data);
   return null;
 }
 

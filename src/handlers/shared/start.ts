@@ -1,5 +1,5 @@
 import { Context, IssueType, Label, GitHubUser } from "../../types";
-import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees } from "../../utils/issue";
+import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
@@ -79,8 +79,9 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
   const { multiplierAmount, multiplierReason, totalPriceOfTask } = await getMultiplierInfoToDisplay(context, issue.labels);
 
-  return {
-    output: [
+  await addCommentToIssue(
+    context,
+    [
       assignTableComment({
         multiplierAmount,
         multiplierReason,
@@ -92,6 +93,6 @@ export async function start(context: Context, issue: any, sender: { id: number; 
       }),
       assignmentComment.tips,
       metadata,
-    ].join("\n"),
-  };
+    ].join("\n") as string
+  );
 }

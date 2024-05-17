@@ -15,10 +15,6 @@ on:
         description: "Auth Token"
       ref:
         description: "Ref"
-      directive:
-        description: "start/stop directive"
-      xpAmount:
-        description: "Penalty XP Amount"
 
 jobs:
   compute:
