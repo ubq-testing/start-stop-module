@@ -33,6 +33,7 @@ plugins:
           example: "/start | /stop"
           with:
             disabledCommands: 
+              - start
             timers:
               reviewDelayTolerance: 86000
               taskStaleTimeoutDuration: 2580000
