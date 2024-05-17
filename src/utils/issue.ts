@@ -1,6 +1,5 @@
 import { Context } from "../types/context";
-import { HandlerReturnValuesNoVoid } from "../types/handlers";
-import { GitHubIssue, GitHubPayload, GitHubRepository, IssueType } from "../types/payload";
+import { GitHubIssue, GitHubPayload, GitHubRepository, HandlerReturnValuesNoVoid, IssueType } from "../types/payload";
 import { LogReturn } from "../adapters/supabase/helpers/logs";
 import { getLinkedPullRequests } from "./get-linked-prs";
 
