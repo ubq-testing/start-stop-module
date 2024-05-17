@@ -8,7 +8,6 @@ import { Context } from "./types/context";
 import { envSchema } from "./types/env";
 import { startStopSchema, PluginInputs } from "./types/plugin-input";
 import { userStartStop } from "./handlers/user-start-stop";
-import { Logs } from "./adapters/supabase/helpers/logs";
 
 export async function startStopBounty() {
   const payload = github.context.payload.inputs;
@@ -34,12 +33,27 @@ export async function startStopBounty() {
     config: inputs.settings,
     octokit,
     env,
-    logger: {} as Logs,
+    logger: {
+      debug(message: unknown, ...optionalParams: unknown[]) {
+        console.debug(message, ...optionalParams);
+      },
+      info(message: unknown, ...optionalParams: unknown[]) {
+        console.log(message, ...optionalParams);
+      },
+      warn(message: unknown, ...optionalParams: unknown[]) {
+        console.warn(message, ...optionalParams);
+      },
+      error(message: unknown, ...optionalParams: unknown[]) {
+        console.error(message, ...optionalParams);
+      },
+      fatal(message: unknown, ...optionalParams: unknown[]) {
+        console.error(message, ...optionalParams);
+      },
+    },
     adapters: {} as ReturnType<typeof createAdapters>,
   };
 
   context.adapters = createAdapters(supabase, context);
-  context.logger = context.adapters.supabase.logger;
 
   let data: { output: string | null } = { output: null };
 

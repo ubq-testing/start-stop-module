@@ -2,6 +2,7 @@ import { Database } from "../types/database";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Super } from "./supabase";
 import { Context } from "../../../types/context";
+import { addCommentToIssue } from "../../../utils/issue";
 
 export class User extends Super {
   locationResponse: LocationResponse | undefined;
@@ -20,21 +21,23 @@ export class User extends Super {
   async getUserById(userId: number, issueNumber: number) {
     const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
-      return this.context.logger.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
+      console.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
+      return null;
     }
 
-    this.context.logger.info(SUCCESSFULLY_FETCHED_USER, { userId, issueNumber, ...data });
+    console.info(SUCCESSFULLY_FETCHED_USER, { userId, issueNumber, ...data });
     return data;
   }
 
   async getWalletByUserId(userId: number, issueNumber: number) {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if ((error && !data) || !data.wallets?.address) {
-      /** @TODO /wallet command? */
-      return this.context.logger.error("Please set your wallet address with the /wallet command", { userId, issueNumber }, true);
+      console.error("No wallet address found", { userId, issueNumber }, true);
+      await addCommentToIssue(this.context.octokit, "```diff # Please set your wallet address with the /wallet command first and try again. ```");
+      return null;
     }
 
-    this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
+    console.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
     return data.wallets?.address;
   }
 
@@ -62,14 +65,14 @@ export class User extends Super {
       .eq("user_id", userId)
       .order("id", { ascending: false }) // get the latest one
       .maybeSingle();
-    if (accessError) throw this.context.logger.fatal("Error getting access data", accessError);
+    if (accessError) throw console.error("Error getting access data", accessError);
     return accessData;
   }
 
   public async getLocationsFromRepo(repositoryId: number) {
     const { data: locationData, error } = await this.supabase.from("locations").select("id").eq("repository_id", repositoryId);
 
-    if (error) throw this.context.logger.fatal("Error getting location data", new Error(error.message));
+    if (error) throw console.error("Error getting location data", new Error(error.message));
     return locationData;
   }
 }
