@@ -10,11 +10,9 @@ export class Wallet extends Super {
 
   async getWalletByUserId(userId: number) {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
-    if (error && error.code === "PGRST116") {
+    if ((error && !data) || !data.wallets?.address) {
       /** @TODO /wallet command? */
       this.context.logger.error("Please set your wallet address with the /wallet command", { userId }, true);
-    } else if (error) {
-      this.context.logger.error("Failed to fetch wallet", { userId, error });
       throw error;
     }
 
