@@ -1,4 +1,4 @@
-# `@ubiquity/ts-template`
+# `@ubiquity/ts-template` 
  
 This template repository includes support for the following:
 
