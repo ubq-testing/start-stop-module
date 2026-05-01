@@ -11,6 +11,16 @@ export interface PluginInputs<T extends WebhookEventName = SupportedEvents> {
   ref: string;
 }
 
+export const startRequirementSchema = T.Object({
+  enabled: T.Boolean({ default: false }),
+  gatedLabels: T.Array(T.String(), { default: [] }),
+  minimumAccountAgeDays: T.Number({ default: 0 }),
+  minimumMergedPrs: T.Number({ default: 0 }),
+  minimumRelevantRepositories: T.Number({ default: 0 }),
+  relevantRepositoryTopics: T.Array(T.String(), { default: [] }),
+  bypassUsers: T.Array(T.String(), { default: [] }),
+});
+
 export const startStopSchema = T.Object({
   disabledCommands: T.Array(T.String()),
   labels: T.Object({
@@ -24,6 +34,7 @@ export const startStopSchema = T.Object({
   miscellaneous: T.Object({
     maxConcurrentTasks: T.Number(),
   }),
+  startRequirements: T.Optional(startRequirementSchema),
 });
 
 export type StartStopSettings = StaticDecode<typeof startStopSchema>;
