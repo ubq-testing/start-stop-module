@@ -2,6 +2,7 @@ import { Context, IssueType, Label, GitHubUser } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
+import { collectContributorExperienceEvidence, formatExperienceGateFailure, getExperienceGateDecision } from "./contributor-experience";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import { getMultiplierInfoToDisplay } from "./get-multiplier-info";
 import { getTimeLabelsAssigned } from "./get-time-labels-assigned";
@@ -71,6 +72,19 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   }
 
   const { id, login } = sender;
+
+  if (config.startRequirements) {
+    const evidence = await collectContributorExperienceEvidence(context, login);
+    const decision = getExperienceGateDecision(labels, config.startRequirements, login, evidence);
+    if (decision.required && !decision.passed) {
+      await addCommentToIssue(context, formatExperienceGateFailure(decision.missingRequirements));
+      throw logger.error("Contributor does not meet the configured /start experience requirements", {
+        login,
+        missingRequirements: decision.missingRequirements,
+      });
+    }
+  }
+
   const toCreate = { duration, priceLabel };
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
